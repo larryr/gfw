@@ -1,0 +1,16 @@
+OPTIONS
+logging			no
+
+INTERFACES
+internet	eth0	0.0.0.0/0
+lan			eth1	10.0.1.0/24
+vpn			eth2	10.0.1.0/24
+
+ALIASES
+
+FIREWALL
+lan > *
+
+POLICIES
+
+CUSTOM
