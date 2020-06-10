@@ -1,0 +1,30 @@
+OPTIONS
+default_rules   no
+logging			no
+established     yes
+
+INTERFACES
+wan			eth2	10.0.0.0/0    # Internet
+lan			eth0	10.0.0.0/8    # cabled
+wlan		eth1	172.22.0.0/16  # wireless
+
+ALIASES
+mypc    10.0.0.2        # my pc
+router  1.2.3.4         # external router address
+server  10.0.0.3        # an internal server
+mal     192.168.1.0/24  # a malicious network
+
+FIREWALL
+lan [.] >  wan                    # lan can go outside with masquerade
+wlan    /  wan                    # wlan cannot go outside
+wlan    >  mypc : 8080 tcp        # wlan can connect to my pc at port 8080 tcp
+*       >  [router:80] server:80  # anything can connect to server:80 with dNAT
+*       /  mal                    # nothing can connect to the mal network
+
+POLICIES
+*       /  lan  # by default nothing can connect to lan network
+
+CUSTOM
+-A INPUT -p tcp --dport 7792 -j LOG --log-prefix "PORT 7792"
+-A INPUT -p tcp --dport 7792 -j ACCEPT
+
