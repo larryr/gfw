@@ -111,6 +111,12 @@ func lexSection(lex *Lexer) stateFn {
 	return lex.errorf("stopping here")
 }
 
+// lexStatement will scan statements within a non-native section.
+// A statement is a line-terminated sequence of tokens.
+// comments are consumed and ignored.
+// comments at the end of a line are the last items in a line and the
+// entire comment is treated as an "end of statemnt".
+// a native formula (started with '|') ends at new-line marks an end of statement
 func lexStatement(lex *Lexer) stateFn {
 
 	lex.consumeNonNLwhite()
@@ -193,10 +199,6 @@ func lexNumbers(lex *Lexer) stateFn {
 		}
 		lex.emit(TokHOSTADDR)
 	}
-	r := lex.peek()
-	if !unicode.IsSpace(r) && r != symHYPH {
-		return lex.errorf("expected space after addr")
-	}
 	return lex.popStateFn()
 }
 
@@ -215,6 +217,10 @@ func lexList(lex *Lexer) stateFn {
 		return lexNumbers
 	case r == symCOMA:
 		lex.pos++
+		return lexList
+	case r == symHYPH:
+		lex.pos++
+		lex.emit(TokHYPH)
 		return lexList
 	case r == symRPAREN:
 		lex.pos++
@@ -294,7 +300,6 @@ func lexPort(lex *Lexer) stateFn {
 }
 
 // lexSectionNative will scan the native section as lines
-//
 func lexSectionNative(lex *Lexer) stateFn {
 
 	lex.consumeWhitespace()
@@ -314,14 +319,6 @@ func lexSectionNative(lex *Lexer) stateFn {
 		if scanFormula(lex) {
 			return lexSectionNative
 		}
-		/*
-			//lex.consumeWhitespace()
-			lex.acceptRunUntil(runLineTail)
-			if lex.start < lex.pos {
-				lex.emit(TokFORMULA)
-				return lexSectionNative
-			}
-		*/
 	}
 	return lex.errorf("unexpected input")
 }
