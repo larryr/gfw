@@ -1,16 +1,22 @@
-OPTIONS
+options {
 logging			no
+}
 
-INTERFACES
+interfaces {
 internet	eth0	0.0.0.0/0
 lan			eth1	10.0.1.0/24
 vpn			eth2	10.0.1.0/24
+}
 
-ALIASES
+aliases {
+}
 
-FIREWALL
+firewall {
 lan > *
+}
 
-POLICIES
+defaults {
+}
 
-CUSTOM
+native {
+}

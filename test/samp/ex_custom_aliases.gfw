@@ -1,18 +1,24 @@
-OPTIONS
-logging			no
+options {
+    logging			no
+}
 
-INTERFACES
+interfaces {
 internet	eth0	0.0.0.0/0
 lan			eth1	10.0.0.0/24
+}
 
-ALIASES
+aliases {
 mypc	10.0.0.2
+}
 
-FIREWALL
+firewall {
 lan > internet
+}
 
-POLICIES
+defaults {
+}
 
-CUSTOM
+native {
 -A INPUT -i lan -j DROP
 -A OUTPUT -d mypc -j DROP
+}

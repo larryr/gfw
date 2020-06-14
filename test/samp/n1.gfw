@@ -1,0 +1,7 @@
+
+# comment
+
+native {
+    #empty
+    -A INPUT
+}

@@ -29,7 +29,12 @@ firewall {
     local:80 > local:81	 tcp | -m cpu --cpu 0
 }
 
+defaults {
+    *       /  
+}
+
 native {
+    # comment
     -A INPUT -p tcp --dport 7792 -j LOG --log-prefix "PORT 7792"
     -A INPUT -p tcp --dport 7792 -j ACCEPT
 }

@@ -1,15 +1,18 @@
-OPTIONS
+options {
 logging			no
+}
 
-INTERFACES
+interfaces {
 lan			eth1	10.0.1.0/24
 ext			eth2	0.0.0.0/0
+}
 
-ALIASES
+aliases {
 mypc		10.0.1.2
 routerip	1.2.3.4
+}
 
-FIREWALL
+firewall {
 
 # warning 1
 ext > mypc
@@ -17,7 +20,10 @@ ext > [routerip:1234] mypc
 
 # warning 2
 lan > [ext:1234] 8.8.8.8 | -m state --state NEW
+}
 
-POLICIES
+defaults {
+}
 
-CUSTOM
+native {
+}

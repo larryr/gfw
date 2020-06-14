@@ -1,14 +1,17 @@
-OPTIONS
+options {
 logging			no
+}
 
-INTERFACES
+interfaces {
 lan			eth1	10.0.1.0/24
 ext			eth2	10.0.2.0/24
+}
 
-ALIASES
+aliases {
 mypc	10.0.1.1
+}
 
-FIREWALL
+firewall {
 # input/output rules
 local:80 > local:81	 tcp | -m cpu --cpu 0
 local:83 > mypc:84  tcp
@@ -24,7 +27,10 @@ mypc:100 / local:200  udp
 local [10.0.2.5:90] > mypc  tcp
 local > [10.0.2.6:90] mypc  tcp
 local [.] > mypc
+}
 
-POLICIES
+defaults {
+}
 
-CUSTOM
+native {
+}

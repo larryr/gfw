@@ -1,7 +1,8 @@
-INTERFACES
+interfaces {
 lan		eth0	10.0.0.0/24
 ext		eth1	0.0.0.0/0
-
-ALIASES
+}
+aliases {
 mypc			10.0.0.2
 router_ext_ip	1.2.3.4
+}

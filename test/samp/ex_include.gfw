@@ -1,13 +1,17 @@
-OPTIONS
+options {
 default_rules 	yes
 logging			no
+}
 
 @include ex_included.config
 
-FIREWALL
+firewall {
 lan [.] > ext
 ext > [router_ext_ip:80] mypc
+}
 
-POLICIES
+defaults {
+}
 
-CUSTOM
+native {
+}

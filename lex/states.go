@@ -54,6 +54,7 @@ func lexOuter(lex *Lexer) stateFn {
 
 	case r == symHASH:
 		// starting a comment; consume it.
+		lex.backup()
 		lex.pushStateFn(lexOuter)
 		return lexComment
 	}
@@ -301,11 +302,12 @@ func lexPort(lex *Lexer) stateFn {
 
 // lexSectionNative will scan the native section as lines
 func lexSectionNative(lex *Lexer) stateFn {
-
 	lex.consumeWhitespace()
 
-	switch r := lex.next(); {
+	r := lex.next()
+	switch {
 	case r == symHASH:
+		lex.backup()
 		lex.pushStateFn(lexSectionNative)
 		return lexComment
 	case isEndOfLine(r):
@@ -320,15 +322,14 @@ func lexSectionNative(lex *Lexer) stateFn {
 			return lexSectionNative
 		}
 	}
-	return lex.errorf("unexpected input")
+	return lex.errorf("unexpected input: %v", r)
 }
 
 // scan rest of line and return as part of token TokFORMULA
 // return true if formula found else false
 func scanFormula(lex *Lexer) bool {
 	lex.consumeWhitespace() //allow and ignore leading ws
-	lex.acceptRunUntil(runLineTail)
-	if lex.start < lex.pos {
+	if lex.acceptRunUntil(runLineTail) {
 		lex.emit(TokFORMULA)
 		return true
 	}

@@ -1,18 +1,21 @@
-OPTIONS
+options {
 default_rules 	yes
 logging			no
+}
 
-INTERFACES
+interfaces {
 lan		eth0	10.0.0.0/24
 ext		eth1	0.0.0.0/0
 dummy		eth2	none	ignore
+}
 
-ALIASES
+aliases {
 mypc			10.0.0.2
 router_ext_ip	1.2.3.4
 malicious_host	5.6.7.8
+}
 
-FIREWALL
+firewall {
 # ssh accessible from the outside
 * > local:22  tcp
 
@@ -27,13 +30,16 @@ ext > [router_ext_ip:8888] mypc:8888  udp
 
 # allow access to port 80 on this machine
 ext > local:80  tcp
+}
 
-POLICIES
+defaults {
 * // *  icmp
 * // *  udp
 * / *
+}
 
-CUSTOM
+native {
 # log and accept packets on port 7792
 -A INPUT -p tcp --dport 7792 -j LOG --log-prefix "PORT 7792 "
 -A INPUT -p tcp --dport 7792 -j ACCEPT
+}

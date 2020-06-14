@@ -75,7 +75,7 @@ func (lex *Lexer) emit(it TokenType) {
 func (lex *Lexer) next() rune {
 
 	var r rune
-	if lex.pos >= len(lex.input)-1 {
+	if lex.pos >= len(lex.input) {
 		lex.width = 0
 		r = symEOF
 	} else {
@@ -103,11 +103,21 @@ func (lex *Lexer) acceptRun(valid string) {
 }
 
 // consume a run of runes until match rune found
-func (lex *Lexer) acceptRunUntil(match string) {
-	//keep consuming until the invalid is found
-	for strings.IndexRune(match, lex.next()) < 0 {
+// return true if a run found; else false if eol
+func (lex *Lexer) acceptRunUntil(match string) bool {
+	//keep consuming until the match is found
+	var r rune
+	for {
+		r = lex.next()
+		if r == symEOF {
+			return false
+		}
+		if strings.IndexRune(match, r) >= 0 {
+			break
+		}
 	}
 	lex.backup()
+	return true
 }
 
 // ignore text up to current position
