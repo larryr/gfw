@@ -26,6 +26,14 @@ func isStmtStart(r rune) bool {
 	return false
 }
 
+// isOp returns true if one of the valid operators
+func isOp(r rune) bool {
+	if strings.IndexRune(runOps, r) >= 0 {
+		return true
+	}
+	return false
+}
+
 // lexer states
 
 // start scanning for policy statement sections
@@ -115,7 +123,10 @@ func lexStatement(lex *Lexer) stateFn {
 	case unicode.IsDigit(r):
 		lex.pushStateFn(lexStatement)
 		return lexNumbers
+	case isOp(r):
+		return lexOp
 	case r == symCOLON:
+		lex.pushStateFn(lexStatement)
 		return lexPort
 	case r == symHYPH:
 		lex.pos++
@@ -125,6 +136,20 @@ func lexStatement(lex *Lexer) stateFn {
 		lex.pos++
 		lex.emit(TokSLIST)
 		return lexList
+	case r == symSTAR:
+		lex.pos++
+		lex.emit(TokSTAR)
+		return lexStatement
+	case r == symLBRACK:
+		lex.pos++
+		lex.emit(TokLBRACK)
+		return lexNAT
+	case r == symPIPE:
+		lex.pos++ //eat pipe
+		if !scanFormula(lex) {
+			return lex.errorf("expected a native formula")
+		}
+		return lexStatement
 	case isEndOfLine(r):
 		lex.pos++
 		lex.emit(TokENDSTMT)
@@ -199,16 +224,73 @@ func lexList(lex *Lexer) stateFn {
 	return lex.errorf("in list unexpected char:%v", r)
 }
 
+// lexNAT scans the NAT descriptors '['<ident>|<address>[':'<port>]']'
+// we are already in the NAT descriptor looking for end of NAT
+func lexNAT(lex *Lexer) stateFn {
+
+	switch r := lex.peek(); {
+	case r == symDOT:
+		lex.pos++
+		lex.emit(TokDOT)
+		return lexNAT
+	case r == symRBRACK:
+		lex.pos++
+		lex.emit(TokRBRACK)
+		return lexStatement
+	case r == symCOLON:
+		lex.pushStateFn(lexNAT)
+		return lexPort
+	case isAlphaNumeric(r):
+		lex.pushStateFn(lexNAT)
+		return lexIdentifier
+	case unicode.IsDigit(r):
+		lex.pushStateFn(lexNAT)
+		return lexNumbers
+	}
+	return lex.errorf("unexpected symbol in NAT descriptor")
+}
+
+// lexOp scans for an operator.
+// operators can be 1 or 2 characters
+func lexOp(lex *Lexer) stateFn {
+	//  >   == allow
+	//  <>  == bidirectional allow
+	//  /   == drop
+	//  //  == reject
+
+	r := lex.next()
+	switch r {
+	case symGTHAN:
+		lex.emit(TokALLOW)
+		return lexStatement
+	case symLTHAN:
+		rr := lex.peek()
+		if rr == symGTHAN {
+			lex.pos++
+			lex.emit(TokTWALLOW)
+			return lexStatement
+		}
+		return lex.errorf("exected operator got:%v%v", r, rr)
+	case symSLASH:
+		rr := lex.peek()
+		if rr == symSLASH {
+			lex.pos++
+			lex.emit(TokREJECT)
+			return lexStatement
+		}
+		lex.emit(TokDROP)
+		return lexStatement
+	}
+	return lex.errorf("expected operator, got:%v", r)
+}
+
 // lexPort will scan a port number -- ':'<int>
 func lexPort(lex *Lexer) stateFn {
 	lex.pos++ //eat ':'
 	lex.consumeWhitespace()
 	lex.acceptRun(runDigits)
 	lex.emit(TokPORT)
-	if !unicode.IsSpace(lex.peek()) {
-		return lex.errorf("expected space after addr")
-	}
-	return lexSection
+	return lex.popStateFn()
 }
 
 // lexSectionNative will scan the native section as lines
@@ -229,14 +311,31 @@ func lexSectionNative(lex *Lexer) stateFn {
 		return lexOuter
 	default:
 		// scan and emit each line as a separate Formula token
-		//lex.consumeWhitespace()
-		lex.acceptRunUntil(runLineTail)
-		if lex.start < lex.pos {
-			lex.emit(TokFORMULA)
+		if scanFormula(lex) {
 			return lexSectionNative
 		}
+		/*
+			//lex.consumeWhitespace()
+			lex.acceptRunUntil(runLineTail)
+			if lex.start < lex.pos {
+				lex.emit(TokFORMULA)
+				return lexSectionNative
+			}
+		*/
 	}
 	return lex.errorf("unexpected input")
+}
+
+// scan rest of line and return as part of token TokFORMULA
+// return true if formula found else false
+func scanFormula(lex *Lexer) bool {
+	lex.consumeWhitespace() //allow and ignore leading ws
+	lex.acceptRunUntil(runLineTail)
+	if lex.start < lex.pos {
+		lex.emit(TokFORMULA)
+		return true
+	}
+	return false //formula not found
 }
 
 // lexComment scans a comment. The comment marker is known to be present.

@@ -15,8 +15,18 @@ interfaces {
 aliases {
     mypc    10.0.0.2        # my pc
     mal     192.168.1.0/24  # a malicious network
-    pclist1     (johnpc, harrypc, pclist2)
+    pclist1     (johnpc, harrypc, 10.1.0.22)
     pclist2     10.0.0.120-10.0.0.122
+}
+
+firewall {
+    mypc    <> wan  
+    lan [.] >  wan                    # lan can go outside with masquerade
+    wlan    /  wan                    # wlan cannot go outside (drop)
+    wlan    >  mypc : 8080 tcp        # wlan can connect to my pc at port 8080 tcp
+    *       >  [router:80] server:80  # anything can connect to server:80 with dNAT
+    *       //  mal                    # reject anything trying to connect to the mal network
+    local:80 > local:81	 tcp | -m cpu --cpu 0
 }
 
 native {

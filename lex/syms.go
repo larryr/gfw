@@ -20,8 +20,12 @@ const (
 	runEOL         = "\r\n"            //end of lines
 	runLineTail    = runEOL + "|#"     //several lines can end with comment or formula
 	runSTMTSTART   = runAlphanum + "*" //potential start of statements
+	runOps         = "></"             // firewall operators
 
 	// special symbols
+	symGTHAN  = '>'
+	symLTHAN  = '<'
+	symSLASH  = '/'
 	symSTAR   = '*'
 	symAT     = '@'
 	symLBRACK = '['

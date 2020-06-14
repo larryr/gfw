@@ -60,7 +60,7 @@ const (
 
 func (tok Token) String() string {
 
-	if len(tok.Val) > 20 {
+	if tok.Typ != TokError && len(tok.Val) > 20 {
 		return fmt.Sprintf("%v: %.20q...", tok.Typ, tok.Val)
 	}
 	return fmt.Sprintf("%v: %q", tok.Typ, tok.Val)
