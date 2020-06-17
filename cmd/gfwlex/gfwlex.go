@@ -8,10 +8,12 @@ import (
 )
 
 var debug bool
+var quiet bool
 var tokcnt, stmtcnt, formcnt, addrcnt, identcnt int
 
 func main() {
 	flag.BoolVar(&debug, "d", false, "debug output")
+	flag.BoolVar(&quiet, "q", false, "suppress normal output")
 	flag.Parse()
 
 	lex.Debug(debug)
@@ -40,11 +42,13 @@ func main() {
 	}
 
 	//summarize
-	fmt.Printf("statements:\t%v\n", stmtcnt)
-	fmt.Printf("tokens:  \t%v\n", tokcnt)
-	fmt.Printf("idents:  \t%v\n", identcnt)
-	fmt.Printf("addrs:   \t%v\n", addrcnt)
-	fmt.Printf("formulas:\t%v\n", formcnt)
+	if !quiet {
+		fmt.Printf("statements:\t%v\n", stmtcnt)
+		fmt.Printf("tokens:  \t%v\n", tokcnt)
+		fmt.Printf("idents:  \t%v\n", identcnt)
+		fmt.Printf("addrs:   \t%v\n", addrcnt)
+		fmt.Printf("formulas:\t%v\n", formcnt)
+	}
 }
 
 func countTokTyps(t lex.Token) {

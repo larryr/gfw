@@ -17,14 +17,16 @@ Core lexer driver.
 */
 
 type Lexer struct {
-	name   string     //dbg aid
-	input  string     //input stream of runes
-	start  int        //start of current token
-	pos    int        //current position in rune-stream
-	width  int        //current width of in-process rune run
-	state  stateFn    //state machine element
-	tokens chan Token //place to emit new tokens
-	scope  []stateFn  //stack of scopes for returning to prev statefn
+	name     string     //dbg aid
+	input    string     //input stream of runes
+	start    int        //start of current token
+	pos      int        //current position in rune-stream
+	width    int        //current width of in-process rune run
+	state    stateFn    //state machine element
+	tokens   chan Token //place to emit new tokens
+	scope    []stateFn  //stack of scopes for returning to prev statefn
+	sequence bool       //flag when inside a sequence; prevent nesting sequence
+	list     bool       //flag when inside a list; prevent nesting lists
 }
 
 type stateFn func(*Lexer) stateFn
@@ -39,7 +41,7 @@ func NewLexer(name string, in io.Reader) (*Lexer, error) {
 		name:   name,
 		input:  string(buf),
 		state:  lexOuter,
-		tokens: make(chan Token, 2),
+		tokens: make(chan Token, 4),
 	}
 	return l, nil
 }
@@ -122,6 +124,12 @@ func (lex *Lexer) acceptRunUntil(match string) bool {
 
 // ignore text up to current position
 func (lex *Lexer) ignore() {
+	lex.start = lex.pos
+}
+
+// inc pos and ignore
+func (lex *Lexer) incIgnore() {
+	lex.pos++
 	lex.start = lex.pos
 }
 

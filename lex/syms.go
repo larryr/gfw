@@ -17,10 +17,10 @@ const (
 	runIPH         = runDigits + "."  //host address
 	runIPN         = runDigits + "./" //network address range
 	runSYMS        = "*@[].:|#"
-	runEOL         = "\r\n"            //end of lines
-	runLineTail    = runEOL + "|#"     //several lines can end with comment or formula
-	runSTMTSTART   = runAlphanum + "*" //potential start of statements
-	runOps         = "></"             // firewall operators
+	runEOL         = "\r\n"             //end of lines
+	runLineTail    = runEOL + "|#"      //several lines can end with comment or formula
+	runSTMTSTART   = runAlphanum + "*(" //potential start of statements
+	runOps         = "></"              // firewall operators
 
 	// special symbols
 	symGTHAN  = '>'

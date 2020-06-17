@@ -27,7 +27,7 @@ aliases {
 firewall {
     lan [.] >  wan                    # lan can go outside with masquerade
     wlan    /  wan                    # wlan cannot go outside
-    wlan    >  mypc : 8080 tcp        # wlan can connect to my pc at port 8080 tcp
+    wlan    >  mypc :8080 tcp        # wlan can connect to my pc at port 8080 tcp
     *       >  [router:80] server:80  # anything can connect to server:80 with dNAT
     *       /  mal                    # nothing can connect to the mal network
     local:80 > local:81	 tcp | -m cpu --cpu 0

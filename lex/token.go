@@ -13,6 +13,7 @@ type Token struct {
 
 type TokenType int
 
+// token id values.  add a string version below to match.
 const (
 	TokError TokenType = iota //lexing error
 	TokEOF
@@ -54,8 +55,10 @@ const (
 	TokOCTET      // <digit> [<digit>] [<digit>]
 	TokINT        // <number>
 	TokSUBNETMASK // <digit> [<digit>]
+	TokSSEQ       // start sequence
+	TokESEQ       // end sequence
 	TokCOMMENT    // '#' [<text>]\n
-	TokENDSTMT
+	TokENDSTMT    // end of a statement
 )
 
 func (tok Token) String() string {
@@ -140,6 +143,10 @@ func (tt TokenType) String() string {
 		return "TokINT"
 	case TokSUBNETMASK:
 		return "TokSUBNETMASK"
+	case TokSSEQ:
+		return "TokSSEQ"
+	case TokESEQ:
+		return "TokESEQ"
 	case TokCOMMENT:
 		return "TokCOMMENT"
 	case TokENDSTMT:

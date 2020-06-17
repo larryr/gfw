@@ -1,0 +1,28 @@
+
+# test allowing use of port, port-range, port-list
+
+options {
+}
+
+interfaces {
+    wan  eth2 10.0.1.0/0  
+}
+
+aliases {
+    mypc  10.0.1.9
+}
+
+firewall {
+    mypc    > wan:80            #a port
+    mypc    > wan:8000-8800     #port range
+    mypc    > wan:(443,22,500)  #port list
+    mypc    > wan:(1000,2000-2010,3000) #port list w/ port range
+    #? should  wan:(88) be allowed?  only accept :(88) instead of :88 ??
+}
+
+defaults {
+    *       /  
+}
+
+native {
+}

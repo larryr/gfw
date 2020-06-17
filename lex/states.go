@@ -51,7 +51,6 @@ func lexOuter(lex *Lexer) stateFn {
 	case isAlphaNumeric(r):
 		lex.backup()
 		return lexSectionHeader
-
 	case r == symHASH:
 		// starting a comment; consume it.
 		lex.backup()
@@ -104,8 +103,22 @@ func lexSection(lex *Lexer) stateFn {
 	case r == symHASH:
 		lex.pushStateFn(lexSection)
 		return lexComment
+	case r == symLCURLY:
+		lex.pos++ //eat {
+		if lex.sequence {
+			return lex.errorf("nested sequence not allowed")
+		}
+		lex.sequence = true
+		lex.emit(TokSSEQ)
+		return lexSection
 	case r == symRCURLY:
-		lex.pos++
+		lex.pos++ //eat }
+		if lex.sequence {
+			lex.emit(TokESEQ)
+			lex.sequence = false
+			return lexSection
+		}
+		//section end
 		lex.emit(TokRCURLY)
 		return lexOuter
 	}
@@ -134,6 +147,7 @@ func lexStatement(lex *Lexer) stateFn {
 		return lexOp
 	case r == symCOLON:
 		lex.pushStateFn(lexStatement)
+		lex.incIgnore() //ignore symCOLON
 		return lexPort
 	case r == symHYPH:
 		lex.pos++
@@ -246,6 +260,7 @@ func lexNAT(lex *Lexer) stateFn {
 		return lexStatement
 	case r == symCOLON:
 		lex.pushStateFn(lexNAT)
+		lex.incIgnore() //skip symCOLON
 		return lexPort
 	case isAlphaNumeric(r):
 		lex.pushStateFn(lexNAT)
@@ -291,12 +306,48 @@ func lexOp(lex *Lexer) stateFn {
 	return lex.errorf("expected operator, got:%v", r)
 }
 
-// lexPort will scan a port number -- ':'<int>
+// lexPort will scan a port number.
+// allow  ':'<int> or a range ':'<int>'-'<int> or a list '('<int>[','<int>]*')'
+// allow port list with a port range: '('<int>','<int>'-'<int>','<int>')'
 func lexPort(lex *Lexer) stateFn {
-	lex.pos++ //eat ':'
-	lex.consumeWhitespace()
-	lex.acceptRun(runDigits)
-	lex.emit(TokPORT)
+
+	//lex.consumeWhitespace()
+
+	switch r := lex.peek(); {
+	case unicode.IsDigit(r):
+		lex.acceptRun(runDigits)
+		lex.emit(TokPORT)
+	case r == symLPAREN:
+		if lex.list {
+			return lex.errorf("nested port list not allowed")
+		}
+		lex.list = true
+		lex.pos++
+		lex.emit(TokSLIST)
+		return lexPort
+	}
+
+	switch r := lex.peek(); {
+	case r == symCOMA:
+		if !lex.list {
+			return lex.errorf("unexpected ',' in port")
+		}
+		lex.incIgnore()
+		return lexPort
+	case r == symHYPH:
+		lex.pos++
+		lex.emit(TokHYPH)
+		return lexPort
+	case r == symRPAREN:
+		if !lex.list {
+			return lex.errorf("unexpected end of port list")
+		}
+		lex.list = false
+		lex.pos++
+		lex.emit(TokELIST)
+	}
+
+	// leaving port scanning
 	return lex.popStateFn()
 }
 
